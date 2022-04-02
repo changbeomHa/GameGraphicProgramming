@@ -21,7 +21,7 @@
 #include <d3d11_4.h>
 #include <d3dcompiler.h>
 #include <directxcolors.h>
-
+#pragma comment(lib,"d3dcompiler.lib")
 #include <memory>
 
 #include "Resource.h"

@@ -1,5 +1,5 @@
 #include "Renderer/Renderer.h"
-#pragma comment(lib,"d3dcompiler.lib")
+
 namespace library
 {
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -203,7 +203,6 @@ namespace library
         hr = m_d3dDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), nullptr, m_vertexShader.GetAddressOf());
         if (FAILED(hr))
         {
-            //pVSBlob->Release();
             return hr;
         }
 
@@ -221,7 +220,7 @@ namespace library
         // Create the input layout
         hr = m_d3dDevice->CreateInputLayout(layout, numElements, pVSBlob->GetBufferPointer(),
             pVSBlob->GetBufferSize(), m_vertexLayout.GetAddressOf());
-        //pVSBlob->Release();
+
         if (FAILED(hr))
             return hr;
 
@@ -240,7 +239,7 @@ namespace library
 
         // Create the pixel shader
         hr = m_d3dDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, m_pixelShader.GetAddressOf());
-        //pPSBlob->Release();
+
         if (FAILED(hr))
             return hr;
 
@@ -327,29 +326,22 @@ namespace library
 
         DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
 #ifdef _DEBUG
-        // Set the D3DCOMPILE_DEBUG flag to embed debug information in the shaders.
-        // Setting this flag improves the shader debugging experience, but still allows 
-        // the shaders to be optimized and to run exactly the way they will run in 
-        // the release configuration of this program.
+ 
         dwShaderFlags |= D3DCOMPILE_DEBUG;
 
-        // Disable optimizations to further improve shader debugging
         dwShaderFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
         ComPtr<ID3DBlob> pErrorBlob;
-        hr = D3DCompileFromFile(pszFileName, nullptr, nullptr, pszEntryPoint, szShaderModel,
-            dwShaderFlags, 0, ppBlobOut, pErrorBlob.GetAddressOf());
+        hr = D3DCompileFromFile(pszFileName, nullptr, nullptr, pszEntryPoint, szShaderModel,dwShaderFlags, 0, ppBlobOut, pErrorBlob.GetAddressOf());
         if (FAILED(hr))
         {
             if (pErrorBlob)
             {
-                OutputDebugStringA(reinterpret_cast<const char*>(pErrorBlob->GetBufferPointer()));
-                //pErrorBlob->Release();
+                OutputDebugStringA((char*)(pErrorBlob->GetBufferPointer()));
             }
             return hr;
         }
-        //if (pErrorBlob) pErrorBlob->Release();
 
         return S_OK;
     }
