@@ -81,6 +81,7 @@ namespace library
 
 		return static_cast<INT>(msg.wParam);
 	}
+
 	/*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
 	  Method:   Game::GetGameName
 
@@ -95,4 +96,5 @@ namespace library
 	PCWSTR Game::GetGameName() const {
 		return m_pszGameName;
 	}
+
 }

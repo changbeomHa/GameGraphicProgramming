@@ -40,7 +40,6 @@ namespace library
     /*--------------------------------------------------------------------
       TODO: MainWindow::GetWindowClassName definition (remove the comment)
     --------------------------------------------------------------------*/
-
     PCWSTR MainWindow::GetWindowClassName() const {
         return L"windowClassName";
     }
@@ -63,7 +62,7 @@ namespace library
     /*--------------------------------------------------------------------
       TODO: MainWindow::HandleMessage definition (remove the comment)
     --------------------------------------------------------------------*/
-    LRESULT MainWindow::HandleMessage(_In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam){
+    LRESULT MainWindow::HandleMessage(_In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam) {
         switch (uMsg)
         {
         case WM_DESTROY:

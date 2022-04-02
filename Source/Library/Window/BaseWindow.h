@@ -74,7 +74,6 @@ namespace library
         LPCWSTR m_pszWindowName;
     };
 
-
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
         Method:   BaseWindow<DerivedType>::WindowProc
 
@@ -107,7 +106,7 @@ namespace library
             CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
             pThis = (DerivedType*)pCreate->lpCreateParams;
             SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pThis);
-            
+
             pThis->m_hWnd = hWnd;
         }
         else
@@ -123,8 +122,6 @@ namespace library
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
         }
     }
-
-
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
         Method:   BaseWindow<DerivedType>::BaseWindow
 
@@ -141,7 +138,7 @@ namespace library
         m_hWnd = nullptr;
         m_pszWindowName = L"name";
     }
- 
+
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
         Method:   BaseWindow<DerivedType>::GetWindow()
 
@@ -157,6 +154,7 @@ namespace library
     HWND BaseWindow<DerivedType>::GetWindow() const {
         return m_hWnd;
     }
+
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   BaseWindow<DerivedType>::initialize
 
@@ -218,8 +216,8 @@ namespace library
             0, GetWindowClassName(), pszWindowName, dwStyle, x, y,
             nWidth, nHeight, hWndParent, hMenu, GetModuleHandle(NULL), this
         );
-        
 
-        return (m_hWnd ? TRUE : FALSE);
+
+        return (m_hWnd ? S_OK : E_FAIL);
     }
 }
