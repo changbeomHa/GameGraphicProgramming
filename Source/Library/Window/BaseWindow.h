@@ -122,6 +122,7 @@ namespace library
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
         }
     }
+
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
         Method:   BaseWindow<DerivedType>::BaseWindow
 

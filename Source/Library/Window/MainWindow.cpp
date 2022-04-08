@@ -1,4 +1,5 @@
 #include "Window/MainWindow.h"
+#include "wchar.h"
 
 namespace library
 {
@@ -44,6 +45,7 @@ namespace library
         return L"windowClassName";
     }
 
+
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   MainWindow::HandleMessage
 
@@ -63,6 +65,7 @@ namespace library
       TODO: MainWindow::HandleMessage definition (remove the comment)
     --------------------------------------------------------------------*/
     LRESULT MainWindow::HandleMessage(_In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam) {
+
         switch (uMsg)
         {
         case WM_DESTROY:
