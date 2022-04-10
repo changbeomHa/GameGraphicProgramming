@@ -30,9 +30,6 @@
     <ClCompile Include="Cube\BaseCube.cpp">
       <Filter>소스 파일\Cube</Filter>
     </ClCompile>
-    <ClCompile Include="Cube\SmallCube.cpp">
-      <Filter>소스 파일\Cube</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Shaders.fxh">

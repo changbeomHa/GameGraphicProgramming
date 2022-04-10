@@ -20,7 +20,9 @@ namespace library
         m_featureLevel(D3D_FEATURE_LEVEL_11_0),
         m_renderables(),
         m_vertexShaders(),
-        m_pixelShaders()
+        m_pixelShaders(),
+        m_camera(XMVectorSet(0.0f, 0.0f, -5.0f, 0.0f )),
+        m_projection()
     {
     }
 
@@ -250,23 +252,8 @@ namespace library
 
 
 
-
-        //return S_OK;
-
-
-        // vertex shader 컴파일
-
-        //m_immediateContext->IASetInputLayout(m_vertexLayout.Get());
-        // Compile the pixel shader
-        
-  
         // Set primitive topology
         m_immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        // Initialize the view matrix
-        XMVECTOR Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
-        XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-        XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-        m_view = XMMatrixLookAtLH(Eye, At, Up);
 
         // Initialize the projection matrix
         //-------------XM_PIDIV2? PI
@@ -405,6 +392,29 @@ namespace library
         m_pixelShaders.insert({ pszPixelShaderName, pixelShader });
         */
     }
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+      Method:   Renderer::HandleInput
+
+      Summary:  Add the pixel shader into the renderer and initialize it
+
+      Args:     const DirectionsInput& directions
+                  Data structure containing keyboard input data
+                const MouseRelativeMovement& mouseRelativeMovement
+                  Data structure containing mouse relative input data
+
+      Modifies: [m_camera].
+    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    /*--------------------------------------------------------------------
+      TODO: Renderer::HandleInput definition (remove the comment)
+    --------------------------------------------------------------------*/
+    void Renderer::HandleInput(_In_ const DirectionsInput& directions, _In_ const MouseRelativeMovement& mouseRelativeMovement, _In_ FLOAT deltaTime) {
+        m_camera.HandleInput(
+            directions,
+            mouseRelativeMovement,
+            deltaTime
+        );
+
+    }
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::Update
@@ -421,16 +431,8 @@ namespace library
         for (auto i : m_renderables) {
             i.second->Update(deltaTime);
         }
+        m_camera.Update(deltaTime);
 
-        /*
-        float ClearColor[4] = { 0.0f, 0.125f, 0.6f, 1.0f };
-        m_immediateContext->ClearRenderTargetView(m_renderTargetView.Get(), ClearColor);
-        std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>::const_iterator rb = m_renderables.begin();
-        for (rb; rb != m_renderables.end(); rb++) {
-            m_immediateContext->VSSetShader(rb->second->GetVertexShader().Get(), nullptr, 0);
-            m_immediateContext->PSSetShader(rb->second->GetPixelShader().Get(), nullptr, 0);
-        }
-       */
     }
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -453,7 +455,7 @@ namespace library
             m_immediateContext->IASetInputLayout(i.second->GetVertexLayout().Get());
             ConstantBuffer cb;
             cb.World = XMMatrixTranspose(i.second->GetWorldMatrix());
-            cb.View = XMMatrixTranspose(m_view);
+            cb.View = XMMatrixTranspose(m_camera.GetView());
             cb.Projection = XMMatrixTranspose(m_projection);
             m_immediateContext->UpdateSubresource(i.second->GetConstantBuffer().Get(), 0, nullptr, &cb, 0, 0);
             m_immediateContext->VSSetShader(i.second->GetVertexShader().Get(),nullptr, 0);
@@ -554,58 +556,6 @@ namespace library
         return m_driverType;
     }
 
-    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-      Method:   Renderer::compileShaderFromFile
 
-      Summary:  Helper for compiling shaders with D3DCompile
-
-      Args:     PCWSTR pszFileName
-                  A pointer to a constant null-terminated string that
-                  contains the name of the file that contains the
-                  shader code
-                PCSTR pszEntryPoint
-                  A pointer to a constant null-terminated string that
-                  contains the name of the shader entry point function
-                  where shader execution begins
-                PCSTR pszShaderModel
-                  A pointer to a constant null-terminated string that
-                  specifies the shader target or set of shader
-                  features to compile against
-                ID3DBlob** ppBlobOut
-                  A pointer to a variable that receives a pointer to
-                  the ID3DBlob interface that you can use to access
-                  the compiled code
-
-      Returns:  HRESULT
-                  Status code
-    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-    /*--------------------------------------------------------------------
-      TODO: Renderer::compileShaderFromFile definition (remove the comment)
-    --------------------------------------------------------------------*/
-    /*
-    HRESULT Renderer::compileShaderFromFile(_In_ PCWSTR pszFileName, _In_ PCSTR pszEntryPoint, _In_ PCSTR szShaderModel, _Outptr_ ID3DBlob** ppBlobOut) {
-        HRESULT hr = S_OK;
-
-        DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
-#ifdef _DEBUG
-
-        dwShaderFlags |= D3DCOMPILE_DEBUG;
-
-        dwShaderFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif
-
-        ComPtr<ID3DBlob> pErrorBlob;
-        hr = D3DCompileFromFile(pszFileName, nullptr, nullptr, pszEntryPoint, szShaderModel, dwShaderFlags, 0, ppBlobOut, pErrorBlob.GetAddressOf());
-        if (FAILED(hr))
-        {
-            if (pErrorBlob)
-            {
-                OutputDebugStringA((char*)(pErrorBlob->GetBufferPointer()));
-            }
-            return hr;
-        }
-
-        return S_OK;
-    }
-    */
+    
 }

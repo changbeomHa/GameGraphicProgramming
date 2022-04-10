@@ -134,10 +134,7 @@ namespace library
       TODO: BaseWindow<DerivedType>::BaseWindow definition (remove the comment)
     --------------------------------------------------------------------*/
     template<class DerivedType>
-    BaseWindow<DerivedType>::BaseWindow() {
-        m_hInstance = nullptr;
-        m_hWnd = nullptr;
-        m_pszWindowName = L"name";
+    BaseWindow<DerivedType>::BaseWindow() : m_hInstance(), m_hWnd(),m_pszWindowName() {
     }
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -217,7 +214,6 @@ namespace library
             0, GetWindowClassName(), pszWindowName, dwStyle, x, y,
             nWidth, nHeight, hWndParent, hMenu, GetModuleHandle(NULL), this
         );
-
 
         return (m_hWnd ? S_OK : E_FAIL);
     }

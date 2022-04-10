@@ -15,9 +15,11 @@ namespace library
     /*--------------------------------------------------------------------
       TODO: Game::Game definition (remove the comment)
     --------------------------------------------------------------------*/
-    Game::Game(_In_ PCWSTR pszGameName) : m_pszGameName(pszGameName){
-        m_mainWindow = std::make_unique<MainWindow>();
-        m_renderer = std::make_unique<Renderer>();
+    Game::Game(_In_ PCWSTR pszGameName) :
+        m_pszGameName(pszGameName),
+        m_mainWindow(std::make_unique<MainWindow>()),
+        m_renderer(std::make_unique<Renderer>()) 
+    {     
     }
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -80,11 +82,16 @@ namespace library
             else
             {
                 QueryPerformanceCounter(&EndingTime);
-                Elapsedseconds = (FLOAT)(EndingTime.QuadPart - StartingTime.QuadPart) / (FLOAT)Frequency.QuadPart;
-                QueryPerformanceCounter(&StartingTime);
+                Elapsedseconds = (FLOAT)(EndingTime.QuadPart - StartingTime.QuadPart) / (FLOAT)Frequency.QuadPart;        
+                m_renderer->HandleInput(
+                    m_mainWindow->GetDirections(),
+                    m_mainWindow->GetMouseRelativeMovement(),
+                    Elapsedseconds
+                );
+                m_mainWindow->ResetMouseMovement();
                 m_renderer->Update(Elapsedseconds);
+                QueryPerformanceCounter(&StartingTime);
                 m_renderer->Render();
-                
             }
         }
 
