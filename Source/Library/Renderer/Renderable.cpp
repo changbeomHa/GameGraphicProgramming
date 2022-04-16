@@ -1,7 +1,35 @@
 #include "Renderer/Renderable.h"
-
+#include "Texture/DDSTextureLoader.h"
 namespace library
 {
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+     Method:   Renderable::Renderable
+
+     Summary:  Constructor
+
+     Args:     const std::filesystem::path& textureFilePath
+                 Path to the texture to use
+
+     Modifies: [m_vertexBuffer, m_indexBuffer, m_constantBuffer,
+                m_textureRV, m_samplerLinear, m_vertexShader,
+                m_pixelShader, m_textureFilePath, m_world].
+   M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+   /*--------------------------------------------------------------------
+     TODO: Renderable::Renderable definition (remove the comment)
+   --------------------------------------------------------------------*/
+    Renderable::Renderable(_In_ const std::filesystem::path& textureFilePath) : 
+        m_vertexBuffer(),
+        m_indexBuffer(),
+        m_constantBuffer(),
+        m_textureRV(),
+        m_samplerLinear(),
+        m_vertexShader(),
+        m_pixelShader(),
+        m_textureFilePath(textureFilePath),
+        m_world(XMMatrixIdentity())
+    {
+    }
+
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderable::initialize
 
@@ -23,7 +51,9 @@ namespace library
     --------------------------------------------------------------------*/
     HRESULT Renderable::initialize(_In_ ID3D11Device* pDevice, _In_ ID3D11DeviceContext* pImmediateContext) {
         HRESULT hr = S_OK;
+         
 
+        // vetex buffer desc
         D3D11_BUFFER_DESC bd = {
             .ByteWidth = sizeof(SimpleVertex) * GetNumVertices(),
             .Usage = D3D11_USAGE_DEFAULT,         
@@ -45,10 +75,6 @@ namespace library
         UINT stride = sizeof(SimpleVertex);
         UINT offset = 0;
 
-        //render
-        //pImmediateContext->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
-
-
         bd.Usage = D3D11_USAGE_DEFAULT;
         bd.ByteWidth = sizeof(WORD) * GetNumIndices();
         bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -60,10 +86,28 @@ namespace library
 
         // Create constant buffer
         bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(ConstantBuffer);
+        bd.ByteWidth = sizeof(CBChangesEveryFrame);
         bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         bd.CPUAccessFlags = 0;
         hr = pDevice->CreateBuffer(&bd, nullptr, m_constantBuffer.GetAddressOf()); // nullptr?
+        if (FAILED(hr))
+            return hr;
+
+        hr = CreateDDSTextureFromFile(pDevice, m_textureFilePath.filename().wstring().c_str(), nullptr, m_textureRV.GetAddressOf());
+        if (FAILED(hr))
+            return hr;
+
+        // Create the sample state
+        D3D11_SAMPLER_DESC sampDesc;
+        ZeroMemory(&sampDesc, sizeof(sampDesc));
+        sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+        sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+        sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+        sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+        sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+        sampDesc.MinLOD = 0;
+        sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+        hr = pDevice->CreateSamplerState(&sampDesc, m_samplerLinear.GetAddressOf());
         if (FAILED(hr))
             return hr;
 
@@ -208,84 +252,115 @@ namespace library
     const XMMATRIX& Renderable::GetWorldMatrix() const {
         return m_world;
     }
-
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-          Method:   Renderable::RotateX
-          Summary:  Rotates around the x-axis
-          Args:     FLOAT angle
-                      Angle of rotation around the x-axis, in radians
-          Modifies: [m_world].
-        M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-    void Renderable::RotateX(_In_ FLOAT angle)
-    {
-        m_world *= XMMatrixRotationX(angle);
+     Method:   Renderable::GetTextureResourceView
+
+     Summary:  Returns the texture resource view
+
+     Returns:  ComPtr<ID3D11ShaderResourceView>&
+                 The texture resource view
+   M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+   /*--------------------------------------------------------------------
+     TODO: Renderable::GetTextureResourceView definition (remove the comment)
+   --------------------------------------------------------------------*/
+    ComPtr<ID3D11ShaderResourceView>& Renderable::GetTextureResourceView() {
+        return m_textureRV;
     }
 
-    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-      Method:   Renderable::RotateY
-      Summary:  Rotates around the y-axis
-      Args:     FLOAT angle
-                  Angle of rotation around the y-axis, in radians
-      Modifies: [m_world].
-    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-    void Renderable::RotateY(_In_ FLOAT angle)
-    {
-        m_world *= XMMatrixRotationY(angle);
+   /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+     Method:   Renderable::GetSamplerState
+
+     Summary:  Returns the sampler state
+
+     Returns:  ComPtr<ID3D11SamplerState>&
+                 The sampler state
+   M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+   /*--------------------------------------------------------------------
+     TODO: Renderable::GetSamplerState definition (remove the comment)
+   --------------------------------------------------------------------*/
+    ComPtr<ID3D11SamplerState>& Renderable::GetSamplerState() {
+        return m_samplerLinear;
     }
 
-    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-      Method:   Renderable::RotateZ
-      Summary:  Rotates around the z-axis
-      Args:     FLOAT angle
-                  Angle of rotation around the z-axis, in radians
-      Modifies: [m_world].
-    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-    void Renderable::RotateZ(_In_ FLOAT angle)
-    {
-        m_world *= XMMatrixRotationZ(angle);
-    }
 
-    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-      Method:   Renderable::RotateRollPitchYaw
-      Summary:  Rotates based on a given pitch, yaw, and roll (Euler angles)
-      Args:     FLOAT pitch
-                  Angle of rotation around the x-axis, in radians
-                FLOAT yaw
-                  Angle of rotation around the y-axis, in radians
-                FLOAT roll
-                  Angle of rotation around the z-axis, in radians
-      Modifies: [m_world].
-    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-    void Renderable::RotateRollPitchYaw(_In_ FLOAT pitch, _In_ FLOAT yaw, _In_ FLOAT roll)
-    {
-        m_world *= XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
-    }
 
-    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-      Method:   Renderable::Scale
-      Summary:  Scales along the x-axis, y-axis, and z-axis
-      Args:     FLOAT scaleX
-                  Scaling factor along the x-axis.
-                FLOAT scaleY
-                  Scaling factor along the y-axis.
-                FLOAT scaleZ
-                  Scaling factor along the z-axis.
-      Modifies: [m_world].
-    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-    void Renderable::Scale(_In_ FLOAT scaleX, _In_ FLOAT scaleY, _In_ FLOAT scaleZ)
-    {
-        m_world *= XMMatrixScaling(scaleX, scaleY, scaleZ);
-    }
+    ///*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+    //      Method:   Renderable::RotateX
+    //      Summary:  Rotates around the x-axis
+    //      Args:     FLOAT angle
+    //                  Angle of rotation around the x-axis, in radians
+    //      Modifies: [m_world].
+    //    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    //void Renderable::RotateX(_In_ FLOAT angle)
+    //{
+    //    m_world *= XMMatrixRotationX(angle);
+    //}
 
-    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-      Method:   Renderable::Translate
-      Summary:  Translates matrix from a vector
-      Args:     const XMVECTOR& offset
-                  3D vector describing the translations along the x-axis, y-axis, and z-axis
-      Modifies: [m_world].
-    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-    void Renderable::Translate(_In_ const XMVECTOR& offset)
-    {
-        m_world *= XMMatrixTranslationFromVector(offset);
-    }
+    ///*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+    //  Method:   Renderable::RotateY
+    //  Summary:  Rotates around the y-axis
+    //  Args:     FLOAT angle
+    //              Angle of rotation around the y-axis, in radians
+    //  Modifies: [m_world].
+    //M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    //void Renderable::RotateY(_In_ FLOAT angle)
+    //{
+    //    m_world *= XMMatrixRotationY(angle);
+    //}
+
+    ///*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+    //  Method:   Renderable::RotateZ
+    //  Summary:  Rotates around the z-axis
+    //  Args:     FLOAT angle
+    //              Angle of rotation around the z-axis, in radians
+    //  Modifies: [m_world].
+    //M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    //void Renderable::RotateZ(_In_ FLOAT angle)
+    //{
+    //    m_world *= XMMatrixRotationZ(angle);
+    //}
+
+    ///*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+    //  Method:   Renderable::RotateRollPitchYaw
+    //  Summary:  Rotates based on a given pitch, yaw, and roll (Euler angles)
+    //  Args:     FLOAT pitch
+    //              Angle of rotation around the x-axis, in radians
+    //            FLOAT yaw
+    //              Angle of rotation around the y-axis, in radians
+    //            FLOAT roll
+    //              Angle of rotation around the z-axis, in radians
+    //  Modifies: [m_world].
+    //M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    //void Renderable::RotateRollPitchYaw(_In_ FLOAT pitch, _In_ FLOAT yaw, _In_ FLOAT roll)
+    //{
+    //    m_world *= XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
+    //}
+
+    ///*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+    //  Method:   Renderable::Scale
+    //  Summary:  Scales along the x-axis, y-axis, and z-axis
+    //  Args:     FLOAT scaleX
+    //              Scaling factor along the x-axis.
+    //            FLOAT scaleY
+    //              Scaling factor along the y-axis.
+    //            FLOAT scaleZ
+    //              Scaling factor along the z-axis.
+    //  Modifies: [m_world].
+    //M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    //void Renderable::Scale(_In_ FLOAT scaleX, _In_ FLOAT scaleY, _In_ FLOAT scaleZ)
+    //{
+    //    m_world *= XMMatrixScaling(scaleX, scaleY, scaleZ);
+    //}
+
+    ///*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+    //  Method:   Renderable::Translate
+    //  Summary:  Translates matrix from a vector
+    //  Args:     const XMVECTOR& offset
+    //              3D vector describing the translations along the x-axis, y-axis, and z-axis
+    //  Modifies: [m_world].
+    //M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    //void Renderable::Translate(_In_ const XMVECTOR& offset)
+    //{
+    //    m_world *= XMMatrixTranslationFromVector(offset);
+    //}
 }

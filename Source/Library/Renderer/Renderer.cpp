@@ -8,9 +8,11 @@ namespace library
       Summary:  Constructor
 
       Modifies: [m_driverType, m_featureLevel, m_d3dDevice, m_d3dDevice1,
-                  m_immediateContext, m_immediateContext1, m_swapChain,
-                  m_swapChain1, m_renderTargetView, m_vertexShader,
-                  m_pixelShader, m_vertexLayout, m_vertexBuffer].
+                 m_immediateContext, m_immediateContext1, m_swapChain,
+                 m_swapChain1, m_renderTargetView, m_depthStencil,
+                 m_depthStencilView, m_cbChangeOnResize, m_camera,
+                 m_projection, m_renderables, m_vertexShaders, 
+                 m_pixelShaders].
     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
     /*--------------------------------------------------------------------
       TODO: Renderer::Renderer definition (remove the comment)
@@ -58,6 +60,7 @@ namespace library
 #ifdef _DEBUG
         createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
+
 
         D3D_DRIVER_TYPE driverTypes[] =
         {
@@ -236,12 +239,12 @@ namespace library
 
         m_immediateContext->OMSetDepthStencilState(pDSState.Get(), 1);
 
+        
         // Create the depth stencil view
         D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
         descDSV.Format = descDepth.Format;
         descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
         descDSV.Texture2D.MipSlice = 0;
-        //---------------m_depthStencil가 맞나?
         hr = m_d3dDevice->CreateDepthStencilView(m_depthStencil.Get(), &descDSV, m_depthStencilView.GetAddressOf());
         if (FAILED(hr))
             return hr;
@@ -250,14 +253,30 @@ namespace library
 
         m_immediateContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-
-
-        // Set primitive topology
-        m_immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
         // Initialize the projection matrix
         //-------------XM_PIDIV2? PI
         m_projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, width / (FLOAT)height, 0.01f, 100.0f);
+        // CHECK
+        D3D11_BUFFER_DESC bd =
+        {
+            .ByteWidth = sizeof(CBChangeOnResize),
+            .Usage = D3D11_USAGE_DEFAULT,
+            .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+            .CPUAccessFlags = 0,
+            .MiscFlags = 0
+        };
+        hr = m_d3dDevice->CreateBuffer(&bd, nullptr, m_cbChangeOnResize.GetAddressOf());
+        if (FAILED(hr))
+            return hr;
+
+        CBChangeOnResize cb_ChangesOnResize;
+        cb_ChangesOnResize.Projection = XMMatrixTranspose(m_projection);
+        m_immediateContext->UpdateSubresource(m_cbChangeOnResize.Get(), 0, nullptr, &cb_ChangesOnResize, 0, 0);
+        m_immediateContext->VSSetConstantBuffers(1u, 1u, m_cbChangeOnResize.GetAddressOf());
+        // Set primitive topology
+        m_immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
 
         for (auto i : m_vertexShaders) {
             i.second->Initialize(m_d3dDevice.Get());
@@ -270,7 +289,11 @@ namespace library
         for (auto i : m_renderables) {
             i.second->Initialize(m_d3dDevice.Get(), m_immediateContext.Get());
         }
-        return S_OK;
+
+        m_camera.Initialize(m_d3dDevice.Get());
+
+
+        return hr;
 
     }
 
@@ -449,31 +472,31 @@ namespace library
         m_immediateContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
         UINT uStride = sizeof(SimpleVertex);
         UINT uOffset = 0;
+
+        CBChangeOnCameraMovement cb_changesOnCameraMovement;
+        cb_changesOnCameraMovement.View = XMMatrixTranspose(m_camera.GetView());
+        m_immediateContext->UpdateSubresource(m_camera.GetConstantBuffer().Get(), 0, nullptr, &cb_changesOnCameraMovement, 0u, 0u);
+        m_immediateContext->VSSetConstantBuffers(0u, 1u, m_camera.GetConstantBuffer().GetAddressOf());
         for (auto i : m_renderables) {
             m_immediateContext->IASetVertexBuffers(0u, 1u, i.second->GetVertexBuffer().GetAddressOf(), &uStride, &uOffset);
             m_immediateContext->IASetIndexBuffer(i.second->GetIndexBuffer().Get(), DXGI_FORMAT_R16_UINT, 0);
             m_immediateContext->IASetInputLayout(i.second->GetVertexLayout().Get());
-            ConstantBuffer cb;
-            cb.World = XMMatrixTranspose(i.second->GetWorldMatrix());
-            cb.View = XMMatrixTranspose(m_camera.GetView());
-            cb.Projection = XMMatrixTranspose(m_projection);
-            m_immediateContext->UpdateSubresource(i.second->GetConstantBuffer().Get(), 0, nullptr, &cb, 0, 0);
+
+            CBChangesEveryFrame cb_changesEveryFrame;
+            cb_changesEveryFrame.World = XMMatrixTranspose(i.second->GetWorldMatrix());
+            m_immediateContext->UpdateSubresource(i.second->GetConstantBuffer().Get(), 0, nullptr, &cb_changesEveryFrame, 0, 0);
             m_immediateContext->VSSetShader(i.second->GetVertexShader().Get(),nullptr, 0);
-            m_immediateContext->VSSetConstantBuffers(0u, 1u, i.second->GetConstantBuffer().GetAddressOf());
+            //m_immediateContext->VSSetConstantBuffers(1, 1, m_cbChangeOnResize.GetAddressOf());
+            m_immediateContext->VSSetConstantBuffers(2, 1, i.second->GetConstantBuffer().GetAddressOf());
+
             m_immediateContext->PSSetShader(i.second->GetPixelShader().Get(), nullptr, 0);
+
+            m_immediateContext->PSSetShaderResources(0, 1, i.second->GetTextureResourceView().GetAddressOf());
+            m_immediateContext->PSSetSamplers(0, 1, i.second->GetSamplerState().GetAddressOf());
+
             
             m_immediateContext->DrawIndexed(i.second->GetNumIndices(), 0, 0);
         }
-        /*
-        std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>::const_iterator rb = m_renderables.begin();
-        //helperslide IASSET4개
-
-        for (rb; rb != m_renderables.end(); rb++) {
-            m_immediateContext->VSSetShader(rb->second->GetVertexShader().Get(), nullptr, 0);
-            m_immediateContext->PSSetShader(rb->second->GetPixelShader().Get(), nullptr, 0);
-            m_immediateContext->DrawIndexed(rb->second->GetNumIndices(), 0, 0);
-        }
-        */
 
         m_swapChain->Present(0, 0);
     }
@@ -498,8 +521,8 @@ namespace library
     --------------------------------------------------------------------*/
     HRESULT Renderer::SetVertexShaderOfRenderable(_In_ PCWSTR pszRenderableName, _In_ PCWSTR pszVertexShaderName) {
         HRESULT hr = S_OK;
-        std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>::const_iterator renderable = m_renderables.find(pszRenderableName);
-        std::unordered_map<PCWSTR, std::shared_ptr<VertexShader>>::const_iterator vs = m_vertexShaders.find(pszVertexShaderName);
+        std::unordered_map<std::wstring, std::shared_ptr<Renderable>>::const_iterator renderable = m_renderables.find(pszRenderableName);
+        std::unordered_map<std::wstring, std::shared_ptr<VertexShader>>::const_iterator vs = m_vertexShaders.find(pszVertexShaderName);
         if (renderable != m_renderables.end() && vs != m_vertexShaders.end()) {
             renderable->second->SetVertexShader(vs->second);
         }
@@ -530,8 +553,8 @@ namespace library
     --------------------------------------------------------------------*/
     HRESULT Renderer::SetPixelShaderOfRenderable(_In_ PCWSTR pszRenderableName, _In_ PCWSTR pszPixelShaderName) {
         HRESULT hr = S_OK;
-        std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>::const_iterator renderable = m_renderables.find(pszRenderableName);
-        std::unordered_map<PCWSTR, std::shared_ptr<PixelShader>>::const_iterator ps = m_pixelShaders.find(pszPixelShaderName);
+        std::unordered_map<std::wstring, std::shared_ptr<Renderable>>::const_iterator renderable = m_renderables.find(pszRenderableName);
+        std::unordered_map<std::wstring, std::shared_ptr<PixelShader>>::const_iterator ps = m_pixelShaders.find(pszPixelShaderName);
         if (renderable == m_renderables.end() || ps == m_pixelShaders.end()) {
             hr = E_FAIL;
             return hr;

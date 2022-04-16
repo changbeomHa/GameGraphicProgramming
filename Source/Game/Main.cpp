@@ -1,28 +1,35 @@
 /*+===================================================================
   File:      MAIN.CPP
+
   Summary:   This application demonstrates creating a Direct3D 11 device
+
   Origin:    http://msdn.microsoft.com/en-us/library/windows/apps/ff729718.aspx
+
   Originally created by Microsoft Corporation under MIT License
   � 2022 Kyung Hee University
 ===================================================================+*/
 
 #include "Common.h"
 
+#include <cstdio>
+#include <filesystem>
 #include <memory>
+#include <source_location>
 
-/*--------------------------------------------------------------------
-  TODO: Include custom cubes (remove the comment)
---------------------------------------------------------------------*/
+#include "Cube/Cube.h"
+#include "Cube/TextureCube.h"
 #include "Game/Game.h"
-#include "Cube/BaseCube.h"
+/*
 #include "Cube/MyCube.h"
 #include "Cube/SmallCube.h"
-#include "Cube/ThirdCube.h"
+*/
 /*F+F+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   Function: wWinMain
+
   Summary:  Entry point to the program. Initializes everything and
             goes into a message processing loop. Idle time is used to
             render the scene.
+
   Args:     HINSTANCE hInstance
               Handle to an instance.
             HINSTANCE hPrevInstance
@@ -33,6 +40,7 @@
             INT nCmdShow
               Flag that says whether the main application window
               will be minimized, maximized, or shown normally
+
   Returns:  INT
               Status code.
 -----------------------------------------------------------------F-F*/
@@ -42,11 +50,10 @@ INT WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 #ifdef _DEBUG
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    std::unique_ptr<library::Game> game = std::make_unique<library::Game>(L"Game Graphics Programming Lab 04: 3D Spaces and Transformations");
+    std::unique_ptr<library::Game> game = std::make_unique<library::Game>(L"Game Graphics Programming Lab 05: Texture Mapping and Constant Buffers");
 
     std::shared_ptr<library::VertexShader> vertexShader = std::make_shared<library::VertexShader>(L"Shaders/Shaders.fxh", "VS", "vs_5_0");
     if (FAILED(game->GetRenderer()->AddVertexShader(L"MainShader", vertexShader)))
@@ -60,13 +67,43 @@ INT WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         return 0;
     }
 
+    std::shared_ptr<Cube> cube = std::make_shared<Cube>("seafloor.dds");
+    if (FAILED(game->GetRenderer()->AddRenderable(L"Cube", cube)))
+    {
+        return 0;
+    }
+
+    if (FAILED(game->GetRenderer()->SetVertexShaderOfRenderable(L"Cube", L"MainShader")))
+    {
+        return 0;
+    }
+
+    if (FAILED(game->GetRenderer()->SetPixelShaderOfRenderable(L"Cube", L"MainShader")))
+    {
+        return 0;
+    }
+    std::shared_ptr<TextureCube> texcube = std::make_shared<TextureCube>("second.dds");
+    if (FAILED(game->GetRenderer()->AddRenderable(L"TextureCube", texcube)))
+    {
+        return 0;
+    }
+
+    if (FAILED(game->GetRenderer()->SetVertexShaderOfRenderable(L"TextureCube", L"MainShader")))
+    {
+        return 0;
+    }
+
+    if (FAILED(game->GetRenderer()->SetPixelShaderOfRenderable(L"TextureCube", L"MainShader")))
+    {
+        return 0;
+    }
+
     /*--------------------------------------------------------------------
       TODO: Add your cubes and set their shaders (remove the comment)
     --------------------------------------------------------------------*/
+    /*
     std::shared_ptr<MyCube> myCube = std::make_shared<MyCube>();
     std::shared_ptr<SmallCube> smallCube = std::make_shared<SmallCube>();
-    std::shared_ptr<ThirdCube> thirdCube = std::make_shared<ThirdCube>();
-
     HRESULT hr = S_OK;
     hr = game->GetRenderer()->AddRenderable(L"myCube", myCube);
     if (FAILED(hr)) {
@@ -84,7 +121,7 @@ INT WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     if (FAILED(game->Initialize(hInstance, nCmdShow))) {
         return 0;
     }
-
+    
     game->GetRenderer()->AddRenderable(L"smallCube", smallCube);
     hr = game->GetRenderer()->SetVertexShaderOfRenderable(L"smallCube", L"MainShader");
     if (FAILED(hr)) {
@@ -94,21 +131,10 @@ INT WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     if (FAILED(hr)) {
         return 0;
     }
+    */
     if (FAILED(game->Initialize(hInstance, nCmdShow))) {
         return 0;
     }
-
-    game->GetRenderer()->AddRenderable(L"thirdCube", thirdCube);
-    hr = game->GetRenderer()->SetVertexShaderOfRenderable(L"thirdCube", L"MainShader");
-    if (FAILED(hr)) {
-        return 0;
-    }
-    hr = game->GetRenderer()->SetPixelShaderOfRenderable(L"thirdCube", L"MainShader");
-    if (FAILED(hr)) {
-        return 0;
-    }
-    if (FAILED(game->Initialize(hInstance, nCmdShow))) {
-        return 0;
-    }
+    
     return game->Run();
 }

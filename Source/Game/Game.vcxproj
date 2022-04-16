@@ -12,6 +12,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cube\BaseCube.cpp" />
+    <ClCompile Include="Cube\Cube.cpp" />
+    <ClCompile Include="Cube\TextureCube.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -24,8 +26,14 @@
   <ItemGroup>
     <ClInclude Include="..\Library\Shader\Shader.h" />
     <ClInclude Include="Cube\BaseCube.h" />
+    <ClInclude Include="Cube\Cube.h" />
     <ClInclude Include="Cube\MyCube.h" />
     <ClInclude Include="Cube\SmallCube.h" />
+    <ClInclude Include="Cube\TextureCube.h" />
+    <ClInclude Include="Cube\ThirdCube.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="seafloor.dds" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
