@@ -1,45 +1,41 @@
-#include "Camera/Camera.h"
+ï»¿#include "Camera/Camera.h"
 
 namespace library
 {
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Camera::Camera
-
       Summary:  Constructor
-
       Modifies: [m_yaw, m_pitch, m_moveLeftRight, m_moveBackForward,
-                 m_moveUpDown, m_travelSpeed, m_rotationSpeed, 
-                 m_padding, m_cameraForward, m_cameraRight, m_cameraUp, 
+                 m_moveUpDown, m_travelSpeed, m_rotationSpeed,
+                 m_padding, m_cameraForward, m_cameraRight, m_cameraUp,
                  m_eye, m_at, m_up, m_rotation, m_view].
     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
     /*--------------------------------------------------------------------
       TODO: Camera::Camera definition (remove the comment)
     --------------------------------------------------------------------*/
     Camera::Camera(_In_ const XMVECTOR& position) :
-        m_yaw(0.0f), 
-        m_pitch(0.0f), 
-        m_moveLeftRight(0.0f), 
-        m_moveBackForward(0.0f), 
-        m_moveUpDown(0.0f), 
-        m_travelSpeed(10.0f), 
+        m_yaw(0.0f),
+        m_pitch(0.0f),
+        m_moveLeftRight(0.0f),
+        m_moveBackForward(0.0f),
+        m_moveUpDown(0.0f),
+        m_travelSpeed(10.0f),
         m_rotationSpeed(10.0f),
-        m_padding(), 
-        m_cameraForward(DEFAULT_FORWARD), 
-        m_cameraRight(DEFAULT_RIGHT), 
+        m_padding(),
+        m_cameraForward(DEFAULT_FORWARD),
+        m_cameraRight(DEFAULT_RIGHT),
         m_cameraUp(DEFAULT_UP),
-        m_eye(position), 
-        m_at(), 
+        m_eye(position),
+        m_at(),
         m_up(),
-        m_rotation(), 
+        m_rotation(),
         m_view()
     {
     }
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Camera::GetEye
-
       Summary:  Returns the eye vector
-
       Returns:  const XMVECTOR&
                   The eye vector
     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
@@ -53,9 +49,7 @@ namespace library
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Camera::GetAt
-
       Summary:  Returns the at vector
-
       Returns:  const XMVECTOR&
                   The at vector
     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
@@ -69,9 +63,7 @@ namespace library
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Camera::GetUp
-
       Summary:  Returns the up vector
-
       Returns:  const XMVECTOR&
                   The up vector
     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
@@ -86,9 +78,7 @@ namespace library
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Camera::GetView
-
       Summary:  Returns the view matrix
-
       Returns:  const XMMATRIX&
                   The view matrix
     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
@@ -102,23 +92,20 @@ namespace library
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Camera::HandleInput
-
       Summary:  Sets the camera state according to the given input
-
       Args:     const DirectionsInput& directions
                   Keyboard directional input
                 const MouseRelativeMovement& mouseRelativeMovement
                   Mouse relative movement input
                 FLOAT deltaTime
                   Time difference of a frame
-
       Modifies: [m_yaw, m_pitch, m_moveLeftRight, m_moveBackForward,
                  m_moveUpDown].
     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
     /*--------------------------------------------------------------------
       TODO: Camera::HandleInput definition (remove the comment)
     --------------------------------------------------------------------*/
-   // run¿¡¼­ ½ÇÇà
+    // runÂ¿Â¡Â¼Â­ Â½Ã‡Ã‡Ã 
     void Camera::HandleInput(_In_ const DirectionsInput& directions, _In_ const MouseRelativeMovement& mouseRelativeMovement, _In_ FLOAT deltaTime)
     {
 
@@ -178,12 +165,11 @@ namespace library
 
 
             m_yaw += rot_move.x;
-            m_pitch += rot_move.y;
 
-            if (m_pitch > XM_PIDIV2)
-                m_pitch = XM_PIDIV2;
-            else if (m_pitch < -XM_PIDIV2)
-                m_pitch = -XM_PIDIV2;
+            if (m_pitch < XM_PIDIV2 - rot_move.y || -XM_PIDIV2 < m_pitch + rot_move.y) {
+                m_pitch += rot_move.y;
+            }
+     
         }
 
     }
@@ -191,14 +177,11 @@ namespace library
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Camera::Update
-
       Summary:  Updates the camera based on its state
-
       Args:     FLOAT deltaTime
                   Time difference of a frame
-
-      Modifies: [m_rotation, m_at, m_cameraRight, m_cameraUp, 
-                 m_cameraForward, m_eye, m_moveLeftRight, 
+      Modifies: [m_rotation, m_at, m_cameraRight, m_cameraUp,
+                 m_cameraForward, m_eye, m_moveLeftRight,
                  m_moveBackForward, m_moveUpDown, m_up, m_view].
     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
     /*--------------------------------------------------------------------
