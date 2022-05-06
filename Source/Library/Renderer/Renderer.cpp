@@ -561,16 +561,27 @@ namespace library
             //m_immediateContext->PSSetSamplers(0, 1, i.second->GetSamplerState().GetAddressOf());
             m_immediateContext->PSSetConstantBuffers(0u, 1u, m_camera.GetConstantBuffer().GetAddressOf());
 
+            m_immediateContext->PSSetConstantBuffers(2u, 1u, i.second->GetConstantBuffer().GetAddressOf());
             if (i.second->HasTexture())
             {
-                m_immediateContext->PSSetShaderResources(0, 1, i.second->GetTextureResourceView().GetAddressOf());
-                m_immediateContext->PSSetSamplers(0, 1, i.second->GetSamplerState().GetAddressOf());
-            }        
-            m_immediateContext->PSSetConstantBuffers(2u, 1u, i.second->GetConstantBuffer().GetAddressOf());
-
-            m_immediateContext->DrawIndexed(i.second->GetNumIndices(), 0, 0);
+                for (UINT k = 0u; k < i.second->GetNumMeshes(); k++)
+                {
+                    const UINT materialIndex = i.second->GetMesh(k).uMaterialIndex;
+                    if (i.second->GetMaterial(materialIndex).pDiffuse)
+                    {
+                        m_immediateContext->PSSetShaderResources(0u, 1u, i.second->GetMaterial(materialIndex).pDiffuse->GetTextureResourceView().GetAddressOf());
+                        m_immediateContext->PSSetSamplers(0u, 1u, i.second->GetMaterial(materialIndex).pDiffuse->GetSamplerState().GetAddressOf());
+                    }
+                    m_immediateContext->DrawIndexed(
+                        i.second->GetMesh(k).uNumIndices,
+                        i.second->GetMesh(k).uBaseIndex,
+                        i.second->GetMesh(k).uBaseVertex);
+                }
+            }
+            else {
+                m_immediateContext->DrawIndexed(i.second->GetNumIndices(), 0, 0);
+            }
         }
-
         m_swapChain->Present(0, 0);
     }
 

@@ -1,37 +1,11 @@
 #include "Renderer/Renderable.h"
-#include "Texture/DDSTextureLoader.h"
+
+#include "assimp/Importer.hpp"	// C++ importer interface
+#include "assimp/scene.h"		// output data structure
+#include "assimp/postprocess.h"	// post processing flags
+
 namespace library
 {
-    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-      Method:   Renderable::Renderable
-
-      Summary:  Constructor
-
-      Args:     const std::filesystem::path& textureFilePath
-                  Path to the texture to use
-
-      Modifies: [m_vertexBuffer, m_indexBuffer, m_constantBuffer,
-                 m_textureRV, m_samplerLinear, m_vertexShader,
-                 m_pixelShader, m_textureFilePath, m_outputColor,
-                 m_world].
-    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-    /*--------------------------------------------------------------------
-      TODO: Renderable::Renderable definition (remove the comment)
-    --------------------------------------------------------------------*/
-    Renderable::Renderable(_In_ const std::filesystem::path& textureFilePath) : 
-        m_vertexBuffer(),
-        m_indexBuffer(),
-        m_constantBuffer(),
-        m_textureRV(),
-        m_samplerLinear(),
-        m_vertexShader(),
-        m_pixelShader(),
-        m_outputColor(XMFLOAT4()),
-        m_textureFilePath(textureFilePath),
-        m_bHasTextures(TRUE),
-        m_world(XMMatrixIdentity())
-    {
-    }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
   Method:   Renderable::Renderable
 
@@ -52,14 +26,12 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
         m_vertexBuffer(),
         m_indexBuffer(),
         m_constantBuffer(),
-        m_textureRV(),
-        m_samplerLinear(),
         m_vertexShader(),
         m_pixelShader(),
-        m_textureFilePath(),
         m_outputColor(outputColor),
-        m_bHasTextures(FALSE), // 해야 하나?
-        m_world(XMMatrixIdentity())
+        m_world(XMMatrixIdentity()),
+        m_aMeshes(),
+        m_aMaterials()
     {
 
     }
@@ -128,25 +100,7 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
         if (FAILED(hr))
             return hr;
 
-        if (m_bHasTextures) {
-            hr = CreateDDSTextureFromFile(pDevice, m_textureFilePath.filename().wstring().c_str(), nullptr, m_textureRV.GetAddressOf());
-            if (FAILED(hr))
-                return hr;
 
-            // Create the sample state
-            D3D11_SAMPLER_DESC sampDesc;
-            ZeroMemory(&sampDesc, sizeof(sampDesc));
-            sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-            sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-            sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-            sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-            sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-            sampDesc.MinLOD = 0;
-            sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-            hr = pDevice->CreateSamplerState(&sampDesc, m_samplerLinear.GetAddressOf());
-            if (FAILED(hr))
-                return hr;
-        }
         //m_world = XMMatrixIdentity();
         return hr;
     }
@@ -289,35 +243,6 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
         return m_world;
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-     Method:   Renderable::GetTextureResourceView
-
-     Summary:  Returns the texture resource view
-
-     Returns:  ComPtr<ID3D11ShaderResourceView>&
-                 The texture resource view
-   M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-   /*--------------------------------------------------------------------
-     TODO: Renderable::GetTextureResourceView definition (remove the comment)
-   --------------------------------------------------------------------*/
-    ComPtr<ID3D11ShaderResourceView>& Renderable::GetTextureResourceView() {
-        return m_textureRV;
-    }
-
-   /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-     Method:   Renderable::GetSamplerState
-
-     Summary:  Returns the sampler state
-
-     Returns:  ComPtr<ID3D11SamplerState>&
-                 The sampler state
-   M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-   /*--------------------------------------------------------------------
-     TODO: Renderable::GetSamplerState definition (remove the comment)
-   --------------------------------------------------------------------*/
-    ComPtr<ID3D11SamplerState>& Renderable::GetSamplerState() {
-        return m_samplerLinear;
-    }
-    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
     Method:   Renderable::GetOutputColor
 
     Summary:  Returns the output color
@@ -332,6 +257,35 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
         return m_outputColor;
     }
 
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+  Method:   Renderable::GetMaterial
+
+  Summary:  Returns a material at given index
+
+  Returns:  const Material&
+              Material at given index
+M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    const Material& Renderable::GetMaterial(UINT uIndex) const
+    {
+        assert(uIndex < m_aMaterials.size());
+
+        return m_aMaterials[uIndex];
+    }
+
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+      Method:   Renderable::GetMesh
+
+      Summary:  Returns a basic mesh entry at given index
+
+      Returns:  const Renderable::BasicMeshEntry&
+                  Basic mesh entry at given index
+    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    const Renderable::BasicMeshEntry& Renderable::GetMesh(UINT uIndex) const
+    {
+        assert(uIndex < m_aMeshes.size());
+
+        return m_aMeshes[uIndex];
+    }
 
   /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
     Method:   Renderable::HasTexture
@@ -345,7 +299,14 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
     TODO: Renderable::HasTexture definition (remove the comment)
   --------------------------------------------------------------------*/
     BOOL Renderable::HasTexture() const {
-        return m_bHasTextures;
+        if (m_aMaterials.size() > 0)
+        {
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
     }
 
 
@@ -427,5 +388,26 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
     void Renderable::Translate(_In_ const XMVECTOR& offset)
     {
         m_world *= XMMatrixTranslationFromVector(offset);
+    }
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+      Method:   Renderable::GetNumMeshes
+      Summary:  Returns the number of meshes
+      Returns:  UINT
+                  Number of meshes
+    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    UINT Renderable::GetNumMeshes() const
+    {
+        return static_cast<UINT>(m_aMeshes.size());
+    }
+
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+      Method:   Renderable::GetNumMaterials
+      Summary:  Returns the number of materials
+      Returns:  UINT
+                  Number of materials
+    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    UINT Renderable::GetNumMaterials() const
+    {
+        return static_cast<UINT>(m_aMaterials.size());
     }
 }

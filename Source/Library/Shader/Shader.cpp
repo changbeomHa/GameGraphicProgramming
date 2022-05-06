@@ -39,7 +39,7 @@ namespace library
       TODO: Shader::GetFileName definition (remove the comment)
     --------------------------------------------------------------------*/
     PCWSTR Shader::GetFileName() const {
-        return L"FileName";
+        return m_pszFileName;
     }
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M

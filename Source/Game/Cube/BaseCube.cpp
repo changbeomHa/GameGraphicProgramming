@@ -10,10 +10,6 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
 /*--------------------------------------------------------------------
   TODO: BaseCube::BaseCube definition (remove the comment)
 --------------------------------------------------------------------*/
-BaseCube::BaseCube(const std::filesystem::path& textureFilePath)
-    : Renderable(textureFilePath)
-{
-}
 
 BaseCube::BaseCube(_In_ const XMFLOAT4& outputColor)
     : Renderable(outputColor)

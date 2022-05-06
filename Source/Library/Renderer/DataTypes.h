@@ -1,5 +1,6 @@
 #pragma once
 #include "Common.h"
+#define NUM_LIGHTS 2
 
 namespace library
 {
