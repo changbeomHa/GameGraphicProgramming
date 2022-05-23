@@ -42,11 +42,11 @@
     <ClCompile Include="Cube\TextureCube.cpp">
       <Filter>소스 파일\Cube</Filter>
     </ClCompile>
-    <ClCompile Include="Light\RotatingPointLight.cpp">
-      <Filter>소스 파일\Light</Filter>
-    </ClCompile>
     <ClCompile Include="Cube\RotatingCube.cpp">
       <Filter>소스 파일\Cube</Filter>
+    </ClCompile>
+    <ClCompile Include="Light\RotatingPointLight.cpp">
+      <Filter>소스 파일\Light</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -57,6 +57,9 @@
       <Filter>소스 파일\Shaders</Filter>
     </None>
     <None Include="Shaders\VoxelShaders.fxh">
+      <Filter>소스 파일\Shaders</Filter>
+    </None>
+    <None Include="Shaders\SkinningShaders.fxh">
       <Filter>소스 파일\Shaders</Filter>
     </None>
   </ItemGroup>
