@@ -98,7 +98,7 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
 
 
         
-        if (HasTexture() && m_aNormalData.empty())
+        if (m_aNormalData.empty())
         {
             calculateNormalMapVectors();
         }
