@@ -497,10 +497,12 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
                 m_immediateContext->IASetVertexBuffers(0u, 2u, aBuffers->GetAddressOf(), aStrides, aOffsets);
                 m_immediateContext->IASetIndexBuffer(s.second->GetSkyBox()->GetIndexBuffer().Get(), DXGI_FORMAT_R16_UINT, 0u);
                 m_immediateContext->IASetInputLayout(s.second->GetSkyBox()->GetVertexLayout().Get());
-
+                
+                XMMATRIX world = s.second->GetSkyBox()->GetWorldMatrix();
+                world = world * XMMatrixTranslationFromVector(m_camera.GetEye());
                 CBChangesEveryFrame cbChangesEveryFrame =
                 {
-                    .World = XMMatrixTranspose(s.second->GetSkyBox()->GetWorldMatrix()),
+                    .World = XMMatrixTranspose(world),
                     .OutputColor = s.second->GetSkyBox()->GetOutputColor(),
                     .HasNormalMap = s.second->GetSkyBox()->HasNormalMap()
                 };
